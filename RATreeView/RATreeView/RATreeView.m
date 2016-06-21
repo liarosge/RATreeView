@@ -84,6 +84,7 @@
 
   self.expandsChildRowsWhenRowExpands = NO;
   self.collapsesChildRowsWhenRowCollapses = NO;
+  self.expandedByDefault = NO;
   self.rowsExpandingAnimation = RATreeViewRowAnimationTop;
   self.rowsCollapsingAnimation = RATreeViewRowAnimationBottom;
 }
@@ -519,6 +520,20 @@
   self.tableView.allowsMultipleSelectionDuringEditing = allowsMultipleSelectionDuringEditing;
 }
 
+- (void)setExpandedDefaultState: (BOOL) expandedState;
+{
+  self.expandedByDefault = expandedState;
+  if(self.expandedByDefault)
+  {
+    self.rowsExpandingAnimation = RATreeViewRowAnimationNone;
+    self.rowsCollapsingAnimation = RATreeViewRowAnimationNone;
+  }
+  else{
+    self.rowsExpandingAnimation = RATreeViewRowAnimationTop;
+    self.rowsCollapsingAnimation = RATreeViewRowAnimationBottom;
+  }
+}
+
 
 #pragma mark - Managing the Editing of Tree Cells
 
@@ -542,8 +557,22 @@
 
 - (void)reloadData
 {
-  [self setupTreeStructure];
-  [self.tableView reloadData];
+  if(self.expandedByDefault){
+    self.hidden = YES;
+    [self setupTreeStructure];
+    [self.tableView reloadData];
+    [UIView animateWithDuration:0. animations:^{
+      for (id item in [self itemsForRowsInRect:self.frame]){
+      [self expandRowForItem: item expandChildren:YES withRowAnimation:RATreeViewRowAnimationNone];      
+      }
+    } completion:^(BOOL finished) {
+        self.hidden = NO;
+    }];
+  }
+  else{
+    [self setupTreeStructure];
+    [self.tableView reloadData];
+  }
 }
 
 - (void)reloadRowsForItems:(NSArray *)items withRowAnimation:(RATreeViewRowAnimation)animation
